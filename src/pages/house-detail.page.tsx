@@ -1,4 +1,5 @@
 import {
+  Button,
   Card,
   CardContent,
   CardHeader,
@@ -6,10 +7,11 @@ import {
   makeStyles,
   Theme,
 } from "@material-ui/core";
+import ArrowBackIcon from "@material-ui/icons/ArrowBack";
 import { Skeleton } from "@material-ui/lab";
-import axios from "axios";
 import React, { ReactElement, useCallback, useEffect, useState } from "react";
-import { useLocation, useParams } from "react-router-dom";
+import { Link as RouterLink, useLocation, useParams } from "react-router-dom";
+import axios from "../common/axios-adapter";
 import Link from "../components/link.component";
 import { CharacterDto } from "../model/character.dto";
 import { HouseDto } from "../model/house.dto";
@@ -18,9 +20,7 @@ import { ResourceURL } from "../model/types";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
-    root: {
-      backgroundColor: "blue",
-    },
+    root: {},
     dataRow: {
       margin: `${theme.spacing(1)}px 0`,
       display: "flex",
@@ -40,6 +40,9 @@ const useStyles = makeStyles((theme: Theme) =>
       height: 21,
       width: 300,
       margin: "8px 0",
+    },
+    navigationBar: {
+      marginTop: theme.spacing(3),
     },
   })
 );
@@ -195,6 +198,16 @@ function HouseDetail(): ReactElement {
           </CardContent>
         </Card>
       )}
+      <div className={classes.navigationBar}>
+        <Button
+          variant="contained"
+          startIcon={<ArrowBackIcon />}
+          component={RouterLink}
+          to="/"
+        >
+          Back to Overview
+        </Button>
+      </div>
     </div>
   );
 }

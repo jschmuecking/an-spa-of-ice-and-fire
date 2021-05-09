@@ -9,7 +9,6 @@ import {
   Typography,
 } from "@material-ui/core";
 import { Pagination, Skeleton } from "@material-ui/lab";
-import axios from "axios";
 import React, {
   ReactElement,
   useCallback,
@@ -17,7 +16,8 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { useHistory, useLocation } from "react-router-dom";
+import { useHistory } from "react-router-dom";
+import axios from "../common/axios-adapter";
 import { HouseDto } from "../model/house.dto";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -63,7 +63,6 @@ const parseLink = (linkInfo: string): PaginationMeta => {
 function Home(): ReactElement {
   const classes = useStyles();
   const history = useHistory();
-  const location = useLocation();
   const [houses, setHouses] = useState<HouseDto[]>([]);
   const paginationMeta = useRef<PaginationMeta>({ pageSize: 0, pages: 0 });
 
