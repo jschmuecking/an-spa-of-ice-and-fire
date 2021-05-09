@@ -10,6 +10,7 @@ import { Skeleton } from "@material-ui/lab";
 import axios from "axios";
 import React, { ReactElement, useCallback, useEffect, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
+import Link from "../components/link.component";
 import { CharacterDto } from "../model/character.dto";
 import { HouseDto } from "../model/house.dto";
 import { ResourceURL } from "../model/types";
@@ -43,12 +44,17 @@ const useStyles = makeStyles((theme: Theme) =>
   })
 );
 
+interface HouseShort {
+  id: string;
+  name: string;
+}
+
 interface AsyncHouseProps {
   currentLord?: string; // name of the current Lord
   heir?: string; // name of the heir
   overlord?: { name: string; id: string }; // name and id of the house that this house answeres to
   founder?: string; // name of the character that founded this house
-  cadetBranches?: { name: string; id: string }[]; // names and ids of houses that were founded from this house
+  cadetBranches?: HouseShort[]; // names and ids of houses that were founded from this house
   swornMembers?: string[]; // names of characters that are sworn to this house
 }
 
@@ -74,7 +80,11 @@ function HouseDetail(): ReactElement {
   );
 
   useEffect(() => {
-    if (!house && houseId) {
+    if (
+      (!house && houseId) ||
+      (house && houseId && getIdFromResourceUrl(house.url) !== houseId)
+    ) {
+      setAsyncProps(undefined);
       loadHouse(houseId);
     }
   }, [loadHouse, house, houseId]);
@@ -133,37 +143,6 @@ function HouseDetail(): ReactElement {
     }
   }, [house]);
 
-  const HouseProperty = (props: {
-    value: string | string[] | { name: string; id: string }[];
-    name: string;
-  }): ReactElement => {
-    const { value, name } = props;
-    const toUl = (
-      list: string[] | { name: string; id: string }[]
-    ): ReactElement | string =>
-      list.length > 0 ? (
-        <ul>
-          {list?.map((item: string | { name: string; id: string }) =>
-            typeof item === "string" ? (
-              <li key={item}>{item}</li>
-            ) : (
-              <li key={item.id}>{item.name}</li>
-            )
-          )}
-        </ul>
-      ) : (
-        "-"
-      );
-    return (
-      <div className={classes.dataRow}>
-        <div className={classes.key}>{name}:</div>
-        <div className={classes.value}>
-          {Array.isArray(value) ? toUl(value) : value || "-"}
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className={classes.root}>
       {!!house && (
@@ -193,7 +172,7 @@ function HouseDetail(): ReactElement {
             )}
             {!asyncProps && <Skeleton className={classes.propSekeleton} />}
             {!!asyncProps?.overlord && (
-              <HouseProperty name="overlord" value={asyncProps.overlord.name} />
+              <HouseProperty name="overlord" value={asyncProps.overlord} />
             )}
             {!asyncProps && <Skeleton className={classes.propSekeleton} />}
             <HouseProperty name="founded" value={house.founded} />
@@ -216,6 +195,47 @@ function HouseDetail(): ReactElement {
           </CardContent>
         </Card>
       )}
+    </div>
+  );
+}
+
+function HouseProperty(props: {
+  value: string | string[] | HouseShort | HouseShort[];
+  name: string;
+}): ReactElement {
+  const { value, name } = props;
+  const classes = useStyles();
+  const toLink = (house: HouseShort): ReactElement => (
+    <Link to={`/houses/${house.id}`}>{house.name}</Link>
+  );
+  const toUl = (list: string[] | HouseShort[]): ReactElement | string =>
+    list.length > 0 ? (
+      <ul>
+        {list?.map((item: string | HouseShort) =>
+          typeof item === "string" ? (
+            <li key={item}>{item}</li>
+          ) : (
+            <li key={item.id}>{toLink(item)}</li>
+          )
+        )}
+      </ul>
+    ) : (
+      "-"
+    );
+  let renderValue: ReactElement | string;
+  if (Array.isArray(value)) {
+    renderValue = toUl(value);
+  } else if (typeof value === "object") {
+    renderValue = toLink(value);
+  } else if (value) {
+    renderValue = value;
+  } else {
+    renderValue = "-";
+  }
+  return (
+    <div className={classes.dataRow}>
+      <div className={classes.key}>{name}:</div>
+      <div className={classes.value}>{renderValue}</div>
     </div>
   );
 }
