@@ -299,6 +299,7 @@ function requestResourceUrl<T>(url: ResourceURL): Promise<T | string> {
     .get<T>(url)
     .then((response) => response.data)
     .catch((error) => {
+      // eslint-disable-next-line no-console
       console.log(error);
       return Promise.resolve("");
     });

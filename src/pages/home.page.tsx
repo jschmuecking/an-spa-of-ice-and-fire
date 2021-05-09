@@ -83,6 +83,7 @@ function Home(): ReactElement {
         })
         .catch((error) => {
           // handle error
+          // eslint-disable-next-line no-console
           console.log(error);
         });
     },
