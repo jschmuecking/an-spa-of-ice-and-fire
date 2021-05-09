@@ -10,6 +10,7 @@ import {
 import ArrowBackIcon from "@material-ui/icons/ArrowBack";
 import { Skeleton } from "@material-ui/lab";
 import React, { ReactElement, useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link as RouterLink, useLocation, useParams } from "react-router-dom";
 import axios from "../common/axios-adapter";
 import Link from "../components/link.component";
@@ -63,6 +64,7 @@ interface AsyncHouseProps {
 
 function HouseDetail(): ReactElement {
   const classes = useStyles();
+  const { t } = useTranslation();
   const location = useLocation<{ currentHouse: HouseDto | undefined }>();
   const [house, setHouse] = useState<HouseDto | undefined>(
     location.state?.currentHouse
@@ -76,7 +78,9 @@ function HouseDetail(): ReactElement {
     (id: string): void => {
       const url: ResourceURL = `https://www.anapioficeandfire.com/api/houses/${id}`;
       requestResourceUrl<HouseDto>(url).then((houseResponse) => {
-        setHouse(houseResponse);
+        if (typeof houseResponse !== "string") {
+          setHouse(houseResponse);
+        }
       });
     },
     [setHouse]
@@ -116,7 +120,9 @@ function HouseDetail(): ReactElement {
       );
       Promise.all([
         characterPromises,
-        requestResourceUrl<HouseDto>(house.overlord),
+        house.overlord
+          ? requestResourceUrl<HouseDto>(house.overlord)
+          : Promise.resolve(""),
         cadetBranchesPromises,
         swornMembersPromises,
       ]).then((results) => {
@@ -127,20 +133,34 @@ function HouseDetail(): ReactElement {
           swornMembersResults,
         ] = results;
         setAsyncProps({
-          currentLord: characterResults[0]?.name,
-          heir: characterResults[1]?.name,
-          overlord: overlordResult
-            ? {
-                name: overlordResult.name,
-                id: getIdFromResourceUrl(overlordResult.url),
-              }
-            : undefined,
-          founder: characterResults[2]?.name,
-          cadetBranches: cadetBranchesResults.map((branch) => ({
-            name: branch.name,
-            id: getIdFromResourceUrl(branch.url),
-          })),
-          swornMembers: swornMembersResults.map((member) => member.name),
+          currentLord:
+            typeof characterResults[0] === "string"
+              ? characterResults[0]
+              : characterResults[0]?.name,
+          heir:
+            typeof characterResults[1] === "string"
+              ? characterResults[1]
+              : characterResults[1]?.name,
+          overlord:
+            overlordResult && typeof overlordResult !== "string"
+              ? {
+                  name: overlordResult.name,
+                  id: getIdFromResourceUrl(overlordResult.url),
+                }
+              : undefined,
+          founder:
+            typeof characterResults[2] === "string"
+              ? characterResults[2]
+              : characterResults[2]?.name,
+          cadetBranches: cadetBranchesResults
+            .filter((item) => typeof item !== "string")
+            .map((branch) => ({
+              name: (branch as HouseDto).name,
+              id: getIdFromResourceUrl((branch as HouseDto).url),
+            })),
+          swornMembers: swornMembersResults
+            .filter((item) => typeof item !== "string")
+            .map((member) => (member as CharacterDto).name),
         });
       });
     }
@@ -152,45 +172,66 @@ function HouseDetail(): ReactElement {
         <Card>
           <CardHeader title={house.name} />
           <CardContent>
-            <HouseProperty name="Region" value={house.region} />
-            <HouseProperty name="coatOfArms" value={house.coatOfArms} />
-            <HouseProperty name="words" value={house.words} />
             <HouseProperty
-              name="titles"
+              name={t("houseDetail.region")}
+              value={house.region}
+            />
+            <HouseProperty
+              name={t("houseDetail.coatOfArms")}
+              value={house.coatOfArms}
+            />
+            <HouseProperty name={t("houseDetail.words")} value={house.words} />
+            <HouseProperty
+              name={t("houseDetail.titles")}
               value={house.titles.filter((item) => !!item)}
             />
             <HouseProperty
-              name="seats"
+              name={t("houseDetail.seats")}
               value={house.seats.filter((item) => !!item)}
             />
             {!!asyncProps?.currentLord && (
               <HouseProperty
-                name="currentLord"
+                name={t("houseDetail.currentLord")}
                 value={asyncProps.currentLord}
               />
             )}
             {!asyncProps && <Skeleton className={classes.propSekeleton} />}
             {!!asyncProps?.heir && (
-              <HouseProperty name="heir" value={asyncProps.heir} />
+              <HouseProperty
+                name={t("houseDetail.heir")}
+                value={asyncProps.heir}
+              />
             )}
             {!asyncProps && <Skeleton className={classes.propSekeleton} />}
             {!!asyncProps?.overlord && (
-              <HouseProperty name="overlord" value={asyncProps.overlord} />
+              <HouseProperty
+                name={t("houseDetail.overlord")}
+                value={asyncProps.overlord}
+              />
             )}
             {!asyncProps && <Skeleton className={classes.propSekeleton} />}
-            <HouseProperty name="founded" value={house.founded} />
-            {!!asyncProps?.founder && (
-              <HouseProperty name="founder" value={asyncProps.founder} />
-            )}
-            {!asyncProps && <Skeleton className={classes.propSekeleton} />}
-            <HouseProperty name="diedOut" value={house.diedOut} />
             <HouseProperty
-              name="ancestralWeapons"
+              name={t("houseDetail.founded")}
+              value={house.founded}
+            />
+            {!!asyncProps?.founder && (
+              <HouseProperty
+                name={t("houseDetail.founder")}
+                value={asyncProps.founder}
+              />
+            )}
+            {!asyncProps && <Skeleton className={classes.propSekeleton} />}
+            <HouseProperty
+              name={t("houseDetail.diedOut")}
+              value={house.diedOut}
+            />
+            <HouseProperty
+              name={t("houseDetail.ancestralWeapons")}
               value={house.ancestralWeapons.filter((item) => !!item)}
             />
             {!!asyncProps?.cadetBranches && (
               <HouseProperty
-                name="cadetBranches"
+                name={t("houseDetail.cadetBranches")}
                 value={asyncProps.cadetBranches}
               />
             )}
@@ -205,7 +246,7 @@ function HouseDetail(): ReactElement {
           component={RouterLink}
           to="/"
         >
-          Back to Overview
+          {t("houseDetail.ui.backButton")}
         </Button>
       </div>
     </div>
@@ -253,8 +294,14 @@ function HouseProperty(props: {
   );
 }
 
-function requestResourceUrl<T>(url: ResourceURL): Promise<T> {
-  return axios.get<T>(url).then((response) => response.data);
+function requestResourceUrl<T>(url: ResourceURL): Promise<T | string> {
+  return axios
+    .get<T>(url)
+    .then((response) => response.data)
+    .catch((error) => {
+      console.log(error);
+      return Promise.resolve("");
+    });
 }
 
 function getIdFromResourceUrl(url: ResourceURL): string {

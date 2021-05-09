@@ -7,6 +7,7 @@ import {
   Typography,
 } from "@material-ui/core";
 import React, { ReactElement } from "react";
+import { useTranslation } from "react-i18next";
 import { Redirect, Route, Switch, Link } from "react-router-dom";
 import Home from "./pages/home.page";
 import HouseDetail from "./pages/house-detail.page";
@@ -32,6 +33,7 @@ const useStyles = makeStyles((theme: Theme) =>
 
 function App(): ReactElement {
   const classes = useStyles();
+  const { t } = useTranslation();
 
   return (
     <div className={classes.root}>
@@ -43,7 +45,7 @@ function App(): ReactElement {
             component={Link}
             to="/"
           >
-            An SPA of Ice and Fire
+            {t("appTitle")}
           </Typography>
         </Toolbar>
       </AppBar>

@@ -16,6 +16,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { useTranslation } from "react-i18next";
 import { useHistory } from "react-router-dom";
 import axios from "../common/axios-adapter";
 import { HouseDto } from "../model/house.dto";
@@ -65,6 +66,7 @@ function Home(): ReactElement {
   const history = useHistory();
   const [houses, setHouses] = useState<HouseDto[]>([]);
   const paginationMeta = useRef<PaginationMeta>({ pageSize: 0, pages: 0 });
+  const { t } = useTranslation();
 
   const loadPage = useCallback(
     (pageNumber?: number, createMeta?: boolean): void => {
@@ -107,11 +109,7 @@ function Home(): ReactElement {
 
   return (
     <Paper className={classes.root}>
-      <Typography variant="h6">Home</Typography>
-      <div>
-        Pages: {paginationMeta.current.pages}, PageSize:{" "}
-        {paginationMeta.current.pageSize}
-      </div>
+      <Typography variant="h6">{t("overview.header")}</Typography>
       <List>
         {houses.length === 0
           ? [...Array(10)].map((e, i) => (
